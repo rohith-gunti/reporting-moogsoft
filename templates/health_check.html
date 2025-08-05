@@ -96,3 +96,50 @@
                 </tr>
             </table>
         </div>
+        <div class="section">
+            <h2>Inbound Integration Errors</h2> {% if recent_inbound_errors %}
+            <h3>Recent Errors (Last 24 hours)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Manager / Integration</th>
+                        <th>Error Count</th>
+                        <th>Reasons</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for manager, error_data in recent_inbound_errors.items() %}
+                    <tr>
+                        <td>{{ manager }}</td>
+                        <td>{{ error_data.count }}</td>
+                        <td>{{ error_data.reasons | join(", ") }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No recent inbound integration errors in the last 24 hours.</p>
+            {% endif %}
+
+            <br> {% if older_inbound_errors %}
+            <h3>Older Errors (More than 24 hours old)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Manager / Integration</th>
+                        <th>Error Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for manager, count in older_inbound_errors.items() %}
+                    <tr>
+                        <td>{{ manager }}</td>
+                        <td>{{ count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No older inbound integration errors.</p>
+            {% endif %}
+        </div>
