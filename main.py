@@ -1,11 +1,18 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from apis import statistics
 from email_report import generate_html_report, send_email
 
+# Define IST timezone (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
+
 def main():
-    now = datetime.utcnow()
-    start = int((now - timedelta(days=1)).timestamp())  # epoch seconds, 24 hours ago
-    end = int(now.timestamp())
+    now = datetime.now(IST)
+    start_dt = now - timedelta(days=1)
+    end_dt = now
+
+    # Convert to epoch in milliseconds
+    start = int(start_dt.timestamp() * 1000)
+    end = int(end_dt.timestamp() * 1000)
 
     # Fetch stats from Moogsoft API
     try:
@@ -16,9 +23,9 @@ def main():
 
     # Prepare data dict for the email template
     data = {
-        "report_date": now.strftime("%B %d, %Y %I:%M %p UTC"),
-        "report_start": datetime.utcfromtimestamp(start).strftime("%B %d, %Y %I:%M %p UTC"),
-        "report_end": datetime.utcfromtimestamp(end).strftime("%B %d, %Y %I:%M %p UTC"),
+        "report_date": now.strftime("%B %d, %Y %I:%M %p IST"),
+        "report_start": start_dt.strftime("%B %d, %Y %I:%M %p IST"),
+        "report_end": end_dt.strftime("%B %d, %Y %I:%M %p IST"),
         "events_count": stats.get("event_count", 0),
         "alerts_count": stats.get("alert_count", 0),
         "incidents_count": stats.get("incident_count", 0),
