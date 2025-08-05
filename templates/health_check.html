@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Moogsoft Daily Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            background-color: #ffffff;
+            margin: 30px auto;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 800px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+        }
+        .header p {
+            font-size: 14px;
+            color: #555;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            color: #007bff;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table, th, td {
+            border: 1px solid #dee2e6;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        th {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Moogsoft Daily Health Report</h1>
+            <p>Generated on {{ report_date }}</p>
+            <p style="font-size: 14px; color: #666;">
+                Reporting Period: <strong>{{ report_start }}</strong> to <strong>{{ report_end }}</strong>
+            </p>
+        </div>
+        <div class="summary-boxes">
+            <table>
+                <tr>
+                    <th>Events</th>
+                    <th>Alerts</th>
+                    <th>Incidents</th>
+                    <th>Noise Reduction</th>
+                </tr>
+                <tr>
+                    <td>{{ events_count }}</td>
+                    <td>{{ alerts_count }}</td>
+                    <td>{{ incidents_count }}</td>
+                    <td>{{ noise_reduction }}%</td>
+                </tr>
+            </table>
+        </div>
