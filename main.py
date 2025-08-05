@@ -65,8 +65,8 @@ def main():
     }
 
     #Debug
-    print("Recent Inbound Errors:", inbound_error_summary.get("recent_errors", {}))
-    print("Older Inbound Errors:", inbound_error_summary.get("older_errors", {}))
+    #print("Recent Inbound Errors:", inbound_error_summary.get("recent_errors", {}))
+    #print("Older Inbound Errors:", inbound_error_summary.get("older_errors", {}))
 
     # Generate HTML report
     html_report = generate_html_report(data)
@@ -82,5 +82,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
