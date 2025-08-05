@@ -19,7 +19,9 @@ def generate_html_report(data):
         incidents_count=data.get("incidents_count"),
         noise_reduction=data.get("noise_reduction"),
         inbound_integrations_count=data.get("inbound_integrations_count"),
-        outbound_integrations_count=data.get("outbound_integrations_count")
+        outbound_integrations_count=data.get("outbound_integrations_count"),
+        recent_inbound_errors=data.get("recent_inbound_errors", {}),
+        older_inbound_errors=data.get("older_inbound_errors", {})
     )
     return html
 
@@ -36,6 +38,7 @@ def send_email(subject, html_body):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(GMAIL_USER, GMAIL_PASS)
         server.sendmail(GMAIL_USER, RECIPIENT_EMAIL, msg.as_string())
+
 
 
 
