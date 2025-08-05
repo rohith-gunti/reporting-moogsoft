@@ -39,9 +39,9 @@ def main():
     # Fetch inbound errors summary
     try:
         inbound_error_summary = inbound_errors.fetch_inbound_errors(
-            integrations_list=inbound_integrations_list,
-            current_epoch=end
-        )
+            inbound_integrations_list,
+            end
+    )
     except Exception as e:
         print(f"Failed to fetch inbound integration errors: {e}")
         inbound_error_summary = {"recent_errors": {}, "older_errors": {}}
@@ -65,8 +65,8 @@ def main():
     }
 
     #Debug
-    print("Recent Inbound Errors:", recent_inbound_errors)
-    print("Older Inbound Errors:", older_inbound_errors)
+    print("Recent Inbound Errors:", inbound_error_summary.get("recent_errors", {}))
+    print("Older Inbound Errors:", inbound_error_summary.get("older_errors", {}))
 
     # Generate HTML report
     html_report = generate_html_report(data)
@@ -82,4 +82,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
