@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from apis import statistics, inbound_integrations
+from apis import statistics, inbound_integrations, inbound_errors
 from email_report import generate_html_report, send_email
 
 # Define IST timezone (UTC+5:30)
@@ -36,6 +36,16 @@ def main():
         inbound_integrations_count = 0
         inbound_integrations_list = []
 
+    # Fetch inbound errors summary
+    try:
+        inbound_error_summary = inbound_errors.fetch_inbound_errors(
+            integrations_list=inbound_integrations_list,
+            current_epoch=end
+        )
+    except Exception as e:
+        print(f"Failed to fetch inbound integration errors: {e}")
+        inbound_error_summary = {"recent_errors": {}, "older_errors": {}}
+
     # Placeholder for outbound integrations (can be added later)
     outbound_integrations_count = 0
 
@@ -49,7 +59,9 @@ def main():
         "incidents_count": stats.get("incident_count", 0),
         "noise_reduction": stats.get("noise_reduction", 0.0),
         "inbound_integrations_count": inbound_integrations_count,
-        "outbound_integrations_count": outbound_integrations_count
+        "outbound_integrations_count": outbound_integrations_count,
+        "recent_inbound_errors": inbound_error_summary.get("recent_errors", {}),
+        "older_inbound_errors": inbound_error_summary.get("older_errors", {})
     }
 
     # Generate HTML report
@@ -60,9 +72,9 @@ def main():
         subject_date = now.strftime("%d %B %Y")
         email_subject = f"Moogsoft Daily Health Report – {subject_date}"
         send_email(email_subject, html_report)
-        print("Email sent successfully.")
+        print("✅ Email sent successfully.")
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"❌ Failed to send email: {e}")
 
 if __name__ == "__main__":
     main()
