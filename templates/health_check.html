@@ -134,7 +134,7 @@
                     {% for manager, count in older_inbound_errors.items() %}
                     <tr>
                         <td>{{ manager }}</td>
-                        <td>{{ error_data.count }}</td>
+                        <td>{{ count.count }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
