@@ -115,7 +115,7 @@
                     <tr>
                         <td>{{ manager }}</td>
                         <td>{{ error_data.count }}</td>
-                        <td>{{ error_data.messages | unique | join(", ") }}</td>
+                        <td>{{ error_data.reasons | unique | join(", ") }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
