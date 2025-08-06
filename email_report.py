@@ -23,7 +23,9 @@ def generate_html_report(data):
         recent_inbound_errors=data.get("recent_inbound_errors", {}),
         older_inbound_errors=data.get("older_inbound_errors", {}),
         recent_outbound_errors=data.get("recent_outbound_errors", {}),
-        older_outbound_errors=data.get("older_outbound_errors", {})
+        older_outbound_errors=data.get("older_outbound_errors", {}),
+        recent_catalogs=data.get("recent_catalogs", []),
+        catalog_sync_status=data.get("catalog_sync_status")
     )
     return html
 
@@ -40,6 +42,7 @@ def send_email(subject, html_body):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(GMAIL_USER, GMAIL_PASS)
         server.sendmail(GMAIL_USER, RECIPIENT_EMAIL, msg.as_string())
+
 
 
 
