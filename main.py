@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from apis import statistics, inbound_integrations, inbound_errors, outbound_integrations, outbound_errors
+from apis import statistics, inbound_integrations, inbound_errors, outbound_integrations, outbound_errors, catalogs
 from email_report import generate_html_report, send_email
 
 # Define IST timezone (UTC+5:30)
@@ -67,6 +67,9 @@ def main():
         print(f"Failed to fetch outbound integration errors: {e}")
         outbound_error_summary = {"recent_errors": {}, "older_errors": {}}
 
+    # ✅ Fetch recent catalog updates
+    catalog_summary = catalogs.fetch_recent_catalog_updates(end)
+
     # ✅ Prepare email content
     data = {
         "report_date": now.strftime("%B %d, %Y %I:%M %p IST"),
@@ -81,7 +84,9 @@ def main():
         "recent_inbound_errors": inbound_error_summary.get("recent_errors", {}),
         "older_inbound_errors": inbound_error_summary.get("older_errors", {}),
         "recent_outbound_errors": outbound_error_summary.get("recent_errors", {}),
-        "older_outbound_errors": outbound_error_summary.get("older_errors", {})
+        "older_outbound_errors": outbound_error_summary.get("older_errors", {}),
+        "recent_catalogs": catalog_summary.get("recent_catalogs", []),
+        "catalog_sync_status": catalog_summary.get("sync_status", "Failed")
     }
 
     # Debug (optional)
@@ -105,3 +110,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
