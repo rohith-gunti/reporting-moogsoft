@@ -138,7 +138,7 @@
                     {% for manager, error_data in older_inbound_errors.items() %}
                     <tr>
                         <td>{{ manager }}</td>
-                        <td>{{ count }}</td>
+                        <td>{{ error_data.count }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -189,7 +189,7 @@
                     {% for name, error_data in older_outbound_errors.items() %}
                     <tr>
                         <td>{{ name }}</td>
-                        <td>{{ count }}</td>
+                        <td>{{ error_data.count }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
