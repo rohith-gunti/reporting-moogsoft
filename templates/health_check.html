@@ -96,8 +96,11 @@
                 </tr>
             </table>
         </div>
+
+        <!-- Inbound Errors Section -->
         <div class="section">
-            <h2>Inbound Integration Errors</h2> {% if recent_inbound_errors %}
+            <h2>Inbound Integration Errors</h2>
+            {% if recent_inbound_errors %}
             <h3>Recent Errors (Last 24 hours)</h3>
             <table>
                 <thead>
@@ -121,7 +124,8 @@
             <p>No recent inbound integration errors in the last 24 hours.</p>
             {% endif %}
 
-            <br> {% if older_inbound_errors %}
+            <br>
+            {% if older_inbound_errors %}
             <h3>Older Errors (More than 24 hours old)</h3>
             <table>
                 <thead>
@@ -131,7 +135,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for manager, count in older_inbound_errors.items() %}
+                    {% for manager, error_data in older_inbound_errors.items() %}
                     <tr>
                         <td>{{ manager }}</td>
                         <td>{{ count.count }}</td>
@@ -143,3 +147,58 @@
             <p>No older inbound integration errors.</p>
             {% endif %}
         </div>
+
+        <!-- Outbound Errors Section -->
+        <div class="section">
+            <h2>Outbound Integration Errors</h2>
+            {% if recent_outbound_errors %}
+            <h3>Recent Errors (Last 24 hours)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Integration Name</th>
+                        <th>Error Count</th>
+                        <th>Messages</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for name, error_data in recent_outbound_errors.items() %}
+                    <tr>
+                        <td>{{ name }}</td>
+                        <td>{{ error_data.count }}</td>
+                        <td>{{ error_data.messages | join(", ") }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No recent outbound integration errors in the last 24 hours.</p>
+            {% endif %}
+
+            <br>
+            {% if older_outbound_errors %}
+            <h3>Older Errors (More than 24 hours old)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Integration Name</th>
+                        <th>Error Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for name, error_data in older_outbound_errors.items() %}
+                    <tr>
+                        <td>{{ name }}</td>
+                        <td>{{ count.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No older outbound integration errors.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+
+</html>
