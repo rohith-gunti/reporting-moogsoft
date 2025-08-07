@@ -1,149 +1,119 @@
 import requests
-from collections import defaultdict
-from datetime import datetime, timedelta
 from config import MOOGSOFT_API_KEY
+from datetime import datetime
+import re
 
-# === CONSTANTS ===
-MAINT_WINDOWS_URL = "https://api.moogsoft.ai/v1/maintenance/windows?limit=5000"
-EXPIRED_OCCURRENCES_URL = "https://api.moogsoft.ai/v1/maintenance/occurrences/expired?limit=5000"
-ALERTS_URL = "https://api.moogsoft.ai/v1/alerts"
-UTC_OFFSET = "+05:30"
+MAINTENANCE_WINDOWS_API = "https://api.moogsoft.ai/v1/maintenance/windows?limit=5000"
+EXPIRED_OCCURRENCES_API = "https://api.moogsoft.ai/v1/maintenance/occurrences/expired?limit=5000"
+ALERTS_API = "https://api.moogsoft.ai/v1/alerts"
 
 HEADERS = {
     "apikey": MOOGSOFT_API_KEY,
     "Content-Type": "application/json"
 }
 
-# === HELPERS ===
 
-def fetch_active_maintenance_windows():
-    resp = requests.get(MAINT_WINDOWS_URL, headers=HEADERS, timeout=15)
-    resp.raise_for_status()
-    data = resp.json()
-    return data.get("data", {}).get("result", []) if isinstance(data, dict) else []
+def parse_config_items(filter_str: str) -> list:
+    """
+    Extract configuration items from the filter string.
+    """
+    match = re.search(r"tags\.configurationItem\s+in\s+\((.*?)\)", filter_str)
+    if match:
+        return [item.strip(" '\"") for item in match.group(1).split(",")]
+    return []
 
-def fetch_expired_occurrences():
-    resp = requests.get(EXPIRED_OCCURRENCES_URL, headers=HEADERS, timeout=15)
-    resp.raise_for_status()
-    data = resp.json()
-    return data.get("data", {}).get("result", []) if isinstance(data, dict) else []
 
-def fetch_alerts_with_maintenance():
-    all_alerts = []
-    start = 0
-    limit = 5000
-    while True:
-        payload = {
-            "limit": limit,
-            "start": start,
-            "utcOffset": f"GMT{UTC_OFFSET}",
-            "jsonSort": [{"sort": "desc", "colId": "last_event_time"}],
-            "fields": ["incidents", "maintenance", "manager", "alert_id", "created_at", "tags"],
-            "jsonFilter": {
-                "maintenance": {
-                    "filterType": "text",
-                    "type": "notBlank"
-                }
-            }
-        }
-        resp = requests.post(ALERTS_URL, json=payload, headers=HEADERS, timeout=25)
-        resp.raise_for_status()
-        result = resp.json()
-        if result.get("status") != "success":
-            raise RuntimeError(f"Unexpected alert API response: {result}")
-        alerts = result.get("data", {}).get("result", [])
-        if not alerts:
-            break
-        all_alerts.extend(alerts)
-        if len(alerts) < limit:
-            break
-        start += limit
-    return all_alerts
+def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
+    """
+    Fetch maintenance stats and alerts affected by maintenance.
 
-def epoch_seconds_to_local_dt(epoch_sec, offset_hours=5, offset_mins=30):
-    dt_utc = datetime.utcfromtimestamp(epoch_sec)
-    delta = timedelta(hours=offset_hours, minutes=offset_mins)
-    return dt_utc + delta
+    Args:
+        epoch_now: Current time in epoch ms.
 
-def month_year_str(dt):
-    return dt.strftime("%B %Y")
+    Returns:
+        dict: A dictionary with maintenance and alert stats.
+    """
+    one_day_ms = 24 * 60 * 60 * 1000
+    now = epoch_now
+    last_24h = now - one_day_ms
 
-# === PUBLIC FUNCTION ===
+    dt_now = datetime.utcfromtimestamp(epoch_now / 1000.0)
 
-def get_report_section():
+    start_of_week = int(datetime(dt_now.year, dt_now.month, dt_now.day).timestamp() * 1000)
+    start_of_month = int(datetime(dt_now.year, dt_now.month, 1).timestamp() * 1000)
+
+    # Last week range (Mon to Sun)
+    from datetime import timedelta
+    weekday = dt_now.weekday()  # 0 = Monday
+    start_last_week = int((dt_now - timedelta(days=weekday + 7)).replace(hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
+    end_last_week = int((dt_now - timedelta(days=weekday + 1)).replace(hour=23, minute=59, second=59, microsecond=999999).timestamp() * 1000)
+
+    # Maintenance Windows
     try:
-        active = fetch_active_maintenance_windows()
-        expired = fetch_expired_occurrences()
-        maint_lookup = {}
-
-        for m in active + expired:
-            mid = m.get("id")
-            if not mid:
-                continue
-            existing = maint_lookup.get(mid, {})
-            maint_lookup[mid] = {
-                "name": m.get("name") or existing.get("name") or "(no name)",
-                "description": m.get("description") or existing.get("description") or "(no description)",
-                "status": m.get("status") or existing.get("status"),
-                "start": m.get("start") or existing.get("start"),
-                "duration": m.get("duration") or existing.get("duration")
-            }
-
-        alerts = fetch_alerts_with_maintenance()
-        monthly_manager_counts = defaultdict(lambda: defaultdict(int))
-        enriched_alerts = []
-
-        for alert in alerts:
-            alert_id = alert.get("alert_id", "<missing_alert_id>")
-            manager = alert.get("manager", "Unknown")
-            created_at = alert.get("created_at")
-            created_dt = epoch_seconds_to_local_dt(created_at) if isinstance(created_at, (int, float)) else None
-            month_str = month_year_str(created_dt) if created_dt else "Unknown"
-            monthly_manager_counts[month_str][manager] += 1
-
-            maintenance_id = str(alert.get("maintenance")) if alert.get("maintenance") is not None else None
-            entry = maint_lookup.get(maintenance_id, {})
-            ci = alert.get("tags", {}).get("configurationItem", "(none)")
-
-            enriched_alerts.append({
-                "alert_id": alert_id,
-                "manager": manager,
-                "created_dt": created_dt,
-                "maintenance_id": maintenance_id,
-                "maintenance_name": entry.get("name", "(unknown)"),
-                "maintenance_description": entry.get("description", ""),
-                "maintenance_status": entry.get("status"),
-                "ci": ci,
-            })
-
-        def month_sort_key(m):
-            try:
-                return datetime.strptime(m, "%B %Y")
-            except:
-                return datetime.min
-
-        sorted_months = sorted(monthly_manager_counts.keys(), key=month_sort_key, reverse=True)
-
-        report_lines = []
-        report_lines.append("=== Maintenance Report ===\n")
-
-        for month in sorted_months:
-            report_lines.append(f"{month}")
-            for manager, count in sorted(monthly_manager_counts[month].items()):
-                report_lines.append(f"  {manager}: {count}")
-            report_lines.append("")
-
-        alerts_with_date = [e for e in enriched_alerts if e["created_dt"]]
-        alerts_with_date.sort(key=lambda x: x["created_dt"], reverse=True)
-
-        for ea in alerts_with_date[:10]:  # only include top 10 recent
-            dtstr = ea["created_dt"].strftime("%Y-%m-%d %H:%M:%S")
-            report_lines.append(f"{dtstr} | Alert ID: {ea['alert_id']} | Manager: {ea['manager']} | CI: {ea['ci']}")
-            report_lines.append(f"    Maintenance: {ea['maintenance_name']} ({ea['maintenance_status']})")
-            report_lines.append(f"    Description: {ea['maintenance_description']}")
-            report_lines.append("")
-
-        return "\n".join(report_lines)
-
+        windows_res = requests.get(MAINTENANCE_WINDOWS_API, headers=HEADERS, timeout=10)
+        windows_res.raise_for_status()
+        windows_data = windows_res.json().get("data", {}).get("result", [])
     except Exception as e:
-        return f"❌ Maintenance report failed: {e}"
+        print("Error fetching maintenance windows:", e)
+        windows_data = []
+
+    active_24h = 0
+    config_items_count = 0
+    total_this_month = 0
+
+    for window in windows_data:
+        start = window.get("start")
+        duration = window.get("duration", 0)
+        end = start + duration if start else 0
+
+        if start and end >= last_24h:
+            active_24h += 1
+            config_items = parse_config_items(window.get("filter", ""))
+            config_items_count += len(config_items)
+
+        if start and start >= start_of_month:
+            total_this_month += 1
+
+    # Affected Alerts
+    try:
+        alerts_res = requests.post(ALERTS_API, headers=HEADERS, json={
+            "limit": 5000,
+            "start": 0,
+            "utcOffset": "GMT+05:30",
+            "jsonSort": [{"sort": "desc", "colId": "last_event_time"}],
+            "fields": ["incidents", "maintenance", "manager", "alert_id", "created_at"],
+            "jsonFilter": {
+                "maintenance": {"filterType": "text", "type": "notBlank"}
+            }
+        }, timeout=15)
+        alerts_res.raise_for_status()
+        alerts = alerts_res.json().get("data", {}).get("alerts", [])
+    except Exception as e:
+        print("Error fetching maintenance alerts:", e)
+        alerts = []
+
+    def group_alerts(alerts, time_filter_start=None, time_filter_end=None):
+        counts = {}
+        for alert in alerts:
+            created = alert.get("created_at", 0)
+            if time_filter_start and created < time_filter_start:
+                continue
+            if time_filter_end and created > time_filter_end:
+                continue
+            manager = alert.get("manager", "Unknown")
+            counts[manager] = counts.get(manager, 0) + 1
+        return counts
+
+    return {
+        "maintenance_summary": {
+            "active_last_24h": active_24h,
+            "config_items_in_24h": config_items_count,
+            "total_this_month": total_this_month
+        },
+        "alerts_by_maintenance": {
+            "last_24h": group_alerts(alerts, time_filter_start=last_24h),
+            "this_week": group_alerts(alerts, time_filter_start=start_of_week),
+            "last_week": group_alerts(alerts, time_filter_start=start_last_week, time_filter_end=end_last_week),
+            "this_month": group_alerts(alerts, time_filter_start=start_of_month)
+        }
+    }
