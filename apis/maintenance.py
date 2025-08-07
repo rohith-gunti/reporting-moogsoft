@@ -1,6 +1,6 @@
 import requests
 from config import MOOGSOFT_API_KEY
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 
 MAINTENANCE_WINDOWS_API = "https://api.moogsoft.ai/v1/maintenance/windows?limit=5000"
@@ -12,7 +12,6 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-
 def parse_config_items(filter_str: str) -> list:
     """
     Extract configuration items from the filter string.
@@ -21,7 +20,6 @@ def parse_config_items(filter_str: str) -> list:
     if match:
         return [item.strip(" '\"") for item in match.group(1).split(",")]
     return []
-
 
 def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
     """
@@ -39,20 +37,25 @@ def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
 
     dt_now = datetime.utcfromtimestamp(epoch_now / 1000.0)
 
-    start_of_week = int(datetime(dt_now.year, dt_now.month, dt_now.day).timestamp() * 1000)
+    # Calculate Sunday as start of the week
+    weekday = dt_now.weekday()  # Monday=0, Sunday=6
+    days_to_sunday = (weekday + 1) % 7
+    sunday = dt_now - timedelta(days=days_to_sunday)
+    start_of_week = int(sunday.replace(hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
+
     start_of_month = int(datetime(dt_now.year, dt_now.month, 1).timestamp() * 1000)
 
-    from datetime import timedelta
-    weekday = dt_now.weekday()  # 0 = Monday
-    start_last_week = int((dt_now - timedelta(days=weekday + 7)).replace(hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
-    end_last_week = int((dt_now - timedelta(days=weekday + 1)).replace(hour=23, minute=59, second=59, microsecond=999999).timestamp() * 1000)
+    # Last week range (Sunday to Saturday)
+    start_last_week = int((sunday - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
+    end_last_week = int((sunday - timedelta(milliseconds=1)).replace(hour=23, minute=59, second=59, microsecond=999999).timestamp() * 1000)
 
-    # Maintenance Windows
+    # Fetch Maintenance Windows
     try:
         windows_res = requests.get(MAINTENANCE_WINDOWS_API, headers=HEADERS, timeout=10)
         windows_res.raise_for_status()
         windows_data = windows_res.json().get("data", {}).get("result", [])
     except Exception as e:
+        print("Error fetching maintenance windows:", e)
         windows_data = []
 
     active_24h = 0
@@ -72,7 +75,7 @@ def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
         if start and start >= start_of_month:
             total_this_month += 1
 
-    # Affected Alerts
+    # Fetch Alerts affected by maintenance
     try:
         alerts_res = requests.post(ALERTS_API, headers=HEADERS, json={
             "limit": 5000,
@@ -87,17 +90,20 @@ def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
         alerts_res.raise_for_status()
         alerts = alerts_res.json().get("data", {}).get("result", [])
     except Exception as e:
+        print("Error fetching maintenance alerts:", e)
         alerts = []
 
     def group_alerts(alerts, time_filter_start=None, time_filter_end=None):
         counts = {}
         for alert in alerts:
             created_sec = alert.get("created_at", 0)
-            created = created_sec * 1000  # convert seconds to ms
-            if time_filter_start and created < time_filter_start:
+            created_ms = created_sec * 1000  # Convert to ms for comparison
+
+            if time_filter_start and created_ms < time_filter_start:
                 continue
-            if time_filter_end and created > time_filter_end:
+            if time_filter_end and created_ms > time_filter_end:
                 continue
+
             manager = alert.get("manager", "Unknown")
             counts[manager] = counts.get(manager, 0) + 1
         return counts
@@ -116,10 +122,7 @@ def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
         }
     }
 
-
 if __name__ == "__main__":
     import time
     epoch_now = int(time.time() * 1000)
-    results = fetch_maintenance_and_alerts(epoch_now)
-    # Just returning results, no prints here.
-    # You can use 'results' as needed in your main code.
+    result = fetch_maintenance_and_alerts(epoch_now)
