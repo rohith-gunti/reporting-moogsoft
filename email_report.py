@@ -27,7 +27,8 @@ def generate_html_report(data):
         recent_catalogs=data.get("recent_catalogs", []),
         catalog_sync_status=data.get("catalog_sync_status"),
         maintenance_summary=data.get("maintenance_summary", {}),
-        alerts_by_maintenance=data.get("alerts_by_maintenance", {})
+        alerts_by_maintenance=data.get("alerts_by_maintenance", {}),
+        audit_summary=data.get("audit_summary", {})
     )
     return html
 
@@ -44,6 +45,7 @@ def send_email(subject, html_body):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(GMAIL_USER, GMAIL_PASS)
         server.sendmail(GMAIL_USER, RECIPIENT_EMAIL, msg.as_string())
+
 
 
 
