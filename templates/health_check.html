@@ -224,6 +224,50 @@
     <p>No catalogs found.</p>
     {% endif %}
 </div>
+<!-- Maintenance Summary -->
+<div class="section">
+    <h2>Maintenance Summary</h2>
+    <table>
+        <tr>
+            <th>Active Windows (Last 24h)</th>
+            <th>Configuration Items in Last 24h</th>
+            <th>Total This Month</th>
+        </tr>
+        <tr>
+            <td>{{ maintenance_summary.active_last_24h }}</td>
+            <td>{{ maintenance_summary.config_items_in_24h }}</td>
+            <td>{{ maintenance_summary.total_this_month }}</td>
+        </tr>
+    </table>
+</div>
+
+<!-- Alerts During Maintenance -->
+<div class="section">
+    <h2>Alerts Associated with Maintenance</h2>
+    {% for period, alert_dict in alerts_by_maintenance.items() %}
+    <h3>{{ period.replace("_", " ").title() }}</h3>
+    {% if alert_dict %}
+    <table>
+        <thead>
+            <tr>
+                <th>Manager</th>
+                <th>Alert Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for manager, count in alert_dict.items() %}
+            <tr>
+                <td>{{ manager }}</td>
+                <td>{{ count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No alerts found for this period.</p>
+    {% endif %}
+    {% endfor %}
+</div>
 
     </div>
     
