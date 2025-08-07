@@ -87,7 +87,7 @@ def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
             }
         }, timeout=15)
         alerts_res.raise_for_status()
-        alerts = alerts_res.json().get("data", {}).get("alerts", [])
+        alerts = alerts_res.json().get("data", {}).get("result", [])
     except Exception as e:
         print("Error fetching maintenance alerts:", e)
         alerts = []
