@@ -95,13 +95,14 @@ def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
     def group_alerts(alerts, time_filter_start=None, time_filter_end=None):
         counts = {}
         for alert in alerts:
-            created = alert.get("created_at", 0)
-            if time_filter_start and created < time_filter_start:
-                continue
-            if time_filter_end and created > time_filter_end:
-                continue
-            manager = alert.get("manager", "Unknown")
-            counts[manager] = counts.get(manager, 0) + 1
+            created_sec = alert.get("created_at", 0)
+            created = created_sec * 1000  # convert seconds to ms
+        if time_filter_start and created < time_filter_start:
+            continue
+        if time_filter_end and created > time_filter_end:
+            continue
+        manager = alert.get("manager", "Unknown")
+        counts[manager] = counts.get(manager, 0) + 1
         return counts
 
     return {
