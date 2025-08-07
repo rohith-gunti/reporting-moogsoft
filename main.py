@@ -1,5 +1,9 @@
 from datetime import datetime, timedelta, timezone
-from apis import statistics, inbound_integrations, inbound_errors, outbound_integrations, outbound_errors, catalogs, maintenance
+from apis import (
+    statistics, inbound_integrations, inbound_errors,
+    outbound_integrations, outbound_errors, catalogs,
+    maintenance, audits  # ✅ added audits
+)
 from email_report import generate_html_report, send_email
 
 # Define IST timezone (UTC+5:30)
@@ -89,6 +93,13 @@ def main():
             }
         }
 
+    # ✅ Fetch audit summary
+    try:
+        audit_summary = audits.fetch_audit_summary(start, end)
+    except Exception as e:
+        print(f"Failed to fetch audit summary: {e}")
+        audit_summary = {}
+    
     # ✅ Prepare email content
     data = {
         "report_date": now.strftime("%B %d, %Y %I:%M %p IST"),
@@ -107,14 +118,9 @@ def main():
         "recent_catalogs": catalog_summary.get("recent_catalogs", []),
         "catalog_sync_status": catalog_summary.get("sync_status", "Failed"),
         "maintenance_summary": maintenance_data.get("maintenance_summary", {}),
-        "alerts_by_maintenance": maintenance_data.get("alerts_by_maintenance", {})
+        "alerts_by_maintenance": maintenance_data.get("alerts_by_maintenance", {}),
+        "audit_summary": audit_summary  # ✅ added audits to template context
     }
-
-    # Debug (optional)
-    # print("Recent Inbound Errors:", data["recent_inbound_errors"])
-    # print("Older Inbound Errors:", data["older_inbound_errors"])
-    # print("Recent Outbound Errors:", data["recent_outbound_errors"])
-    # print("Older Outbound Errors:", data["older_outbound_errors"])
 
     # ✅ Generate HTML report
     html_report = generate_html_report(data)
@@ -128,9 +134,5 @@ def main():
     except Exception as e:
         print(f"❌ Failed to send email: {e}")
 
-
 if __name__ == "__main__":
     main()
-
-
-
