@@ -42,7 +42,6 @@ def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
     start_of_week = int(datetime(dt_now.year, dt_now.month, dt_now.day).timestamp() * 1000)
     start_of_month = int(datetime(dt_now.year, dt_now.month, 1).timestamp() * 1000)
 
-    # Last week range (Mon to Sun)
     from datetime import timedelta
     weekday = dt_now.weekday()  # 0 = Monday
     start_last_week = int((dt_now - timedelta(days=weekday + 7)).replace(hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
@@ -54,7 +53,6 @@ def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
         windows_res.raise_for_status()
         windows_data = windows_res.json().get("data", {}).get("result", [])
     except Exception as e:
-        print("Error fetching maintenance windows:", e)
         windows_data = []
 
     active_24h = 0
@@ -89,7 +87,6 @@ def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
         alerts_res.raise_for_status()
         alerts = alerts_res.json().get("data", {}).get("result", [])
     except Exception as e:
-        print("Error fetching maintenance alerts:", e)
         alerts = []
 
     def group_alerts(alerts, time_filter_start=None, time_filter_end=None):
@@ -97,12 +94,12 @@ def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
         for alert in alerts:
             created_sec = alert.get("created_at", 0)
             created = created_sec * 1000  # convert seconds to ms
-        if time_filter_start and created < time_filter_start:
-            continue
-        if time_filter_end and created > time_filter_end:
-            continue
-        manager = alert.get("manager", "Unknown")
-        counts[manager] = counts.get(manager, 0) + 1
+            if time_filter_start and created < time_filter_start:
+                continue
+            if time_filter_end and created > time_filter_end:
+                continue
+            manager = alert.get("manager", "Unknown")
+            counts[manager] = counts.get(manager, 0) + 1
         return counts
 
     return {
@@ -118,3 +115,11 @@ def fetch_maintenance_and_alerts(epoch_now: int) -> dict:
             "this_month": group_alerts(alerts, time_filter_start=start_of_month)
         }
     }
+
+
+if __name__ == "__main__":
+    import time
+    epoch_now = int(time.time() * 1000)
+    results = fetch_maintenance_and_alerts(epoch_now)
+    # Just returning results, no prints here.
+    # You can use 'results' as needed in your main code.
