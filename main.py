@@ -70,6 +70,25 @@ def main():
     # ✅ Fetch recent catalog updates
     catalog_summary = catalogs.fetch_recent_catalog_updates(end)
 
+    # ✅ Fetch maintenance and alert impact summary
+    try:
+        maintenance_data = maintenance.fetch_maintenance_and_alerts(end)
+    except Exception as e:
+        print(f"Failed to fetch maintenance data: {e}")
+        maintenance_data = {
+            "maintenance_summary": {
+                "active_last_24h": 0,
+                "config_items_in_24h": 0,
+                "total_this_month": 0
+            },
+            "alerts_by_maintenance": {
+                "last_24h": {},
+                "this_week": {},
+                "last_week": {},
+                "this_month": {}
+            }
+        }
+
     # ✅ Prepare email content
     data = {
         "report_date": now.strftime("%B %d, %Y %I:%M %p IST"),
@@ -86,7 +105,9 @@ def main():
         "recent_outbound_errors": outbound_error_summary.get("recent_errors", {}),
         "older_outbound_errors": outbound_error_summary.get("older_errors", {}),
         "recent_catalogs": catalog_summary.get("recent_catalogs", []),
-        "catalog_sync_status": catalog_summary.get("sync_status", "Failed")
+        "catalog_sync_status": catalog_summary.get("sync_status", "Failed"),
+        "maintenance_summary": maintenance_data.get("maintenance_summary", {}),
+        "alerts_by_maintenance": maintenance_data.get("alerts_by_maintenance", {})
     }
 
     # Debug (optional)
@@ -110,4 +131,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
