@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from apis import (
     statistics, inbound_integrations, inbound_errors,
     outbound_integrations, outbound_errors, catalogs,
-    maintenance, audits, alerts   # ✅ added alerts
+    maintenance, audits, alerts, incidents  # ✅ added incidents
 )
 from email_report import generate_html_report, send_email
 
@@ -24,7 +24,7 @@ def main():
     start_ms = int(start_dt.timestamp() * 1000)
     end_ms = int(end_dt.timestamp() * 1000)
 
-    # Epoch in seconds for alerts.py (it converts internally to Moogsoft format)
+    # Epoch in seconds for alerts/incidents.py (it converts internally to Moogsoft format)
     epoch_now_sec = int(now.timestamp())
     last_24h_sec = epoch_now_sec - (24 * 60 * 60)
     month_start_sec = int(datetime(now.year, now.month, 1, tzinfo=IST).timestamp())
@@ -118,6 +118,19 @@ def main():
             "nagios": {"this_month": {}, "last_24h": {}}
         }
 
+    # ✅ Fetch incidents summary
+    try:
+        incidents_summary = incidents.aggregate_incidents(
+            this_month_epoch=month_start_sec,
+            last_24h_epoch=last_24h_sec
+        )
+    except Exception as e:
+        print(f"Failed to fetch incidents summary: {e}")
+        incidents_summary = {
+            "this_month": {},
+            "last_24h": {}
+        }
+
     # ✅ Prepare email content
     data = {
         "report_date": now.strftime("%B %d, %Y %I:%M %p IST"),
@@ -138,7 +151,8 @@ def main():
         "maintenance_summary": maintenance_data.get("maintenance_summary", {}),
         "alerts_by_maintenance": maintenance_data.get("alerts_by_maintenance", {}),
         "audit_summary": audit_summary,
-        "alerts_summary": alerts_summary   # ✅ added alerts to template context
+        "alerts_summary": alerts_summary,        # ✅ alerts summary
+        "incidents_summary": incidents_summary   # ✅ incidents summary added here
     }
 
     # ✅ Generate HTML report
@@ -155,4 +169,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
