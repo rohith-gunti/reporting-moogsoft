@@ -26,7 +26,6 @@ def fetch_incidents_since(start_epoch: int) -> list:
         "filter": f"created_at >= \"{epoch_to_moogsoft_format(start_epoch)}\"",
         "limit": 5000,
         "fields": [
-            "manager",
             "created_at",
             "tags"
         ]
