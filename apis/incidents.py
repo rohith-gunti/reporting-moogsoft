@@ -23,7 +23,28 @@ def fetch_incidents_since(start_epoch: int) -> list:
     }
 
     payload = {
-        "filter": f"created_at >= \"{epoch_to_moogsoft_format(start_epoch)}\"",
+        "filter": {
+            "created_at": {
+                "filterType": "combined",
+                "operator": "AND",
+                "condition1": {
+                    "dateFrom": "1970-01-01 05:30:00",
+                    "dateTo": None,
+                    "filterType": "date",
+                    "type": "greaterThan"
+                },
+                "condition2": {
+                    "filterType": "combined",
+                    "operator": "AND",
+                    "condition1": {
+                        "filterType": "date",
+                        "type": "greaterThanOrEqual",
+                        "dateFrom": start_date_str,
+                        "dateTo": None
+                    }
+                }
+            }
+        },
         "limit": 5000,
         "fields": [
             "created_at",
