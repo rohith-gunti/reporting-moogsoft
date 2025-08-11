@@ -39,7 +39,7 @@ def fetch_incidents_since(start_epoch: int) -> list:
                     "condition1": {
                         "filterType": "date",
                         "type": "greaterThanOrEqual",
-                        "dateFrom": start_date_str,
+                        "dateFrom": {epoch_to_moogsoft_format(start_epoch)},
                         "dateTo": None
                     }
                 }
