@@ -110,6 +110,9 @@ def aggregate_incidents(this_month_epoch: int, last_24h_epoch: int) -> dict:
             summary["total_count"] += 1
             tags = incident.get("tags") or {}
             manager = tags.get("manager") or "Unknown"
+            if isinstance(manager, list):
+                manager = ", ".join(manager)
+            manager = str(manager)
 
             # Helper vars for tag presence and blank check (None or empty string counts as blank)
             def is_blank(val):
