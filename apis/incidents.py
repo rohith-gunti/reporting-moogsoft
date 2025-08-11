@@ -7,7 +7,7 @@ INCIDENTS_API_URL = "https://api.moogsoft.ai/v1/incidents"
 
 def epoch_to_moogsoft_format(epoch_time: int) -> str:
     """
-    Convert epoch seconds to Moogsoft time format: YYYY/MM/DD HH:MM:SS AM/PM
+    Convert epoch seconds to Moogsoft time format: YYYY-MM-DD HH:MM:SS
     """
     return datetime.fromtimestamp(epoch_time, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
@@ -21,6 +21,9 @@ def fetch_incidents_since(start_epoch: int) -> list:
         "apikey": MOOGSOFT_API_KEY,
         "Content-Type": "application/json"
     }
+
+    # Properly format dateFrom with string interpolation
+    date_from_str = epoch_to_moogsoft_format(start_epoch)
 
     payload = {
         "filter": {
@@ -39,7 +42,7 @@ def fetch_incidents_since(start_epoch: int) -> list:
                     "condition1": {
                         "filterType": "date",
                         "type": "greaterThanOrEqual",
-                        "dateFrom": {epoch_to_moogsoft_format(start_epoch)},
+                        "dateFrom": date_from_str,
                         "dateTo": None
                     }
                 }
@@ -48,7 +51,8 @@ def fetch_incidents_since(start_epoch: int) -> list:
         "limit": 5000,
         "fields": [
             "created_at",
-            "tags"
+            "tags",
+            "manager"
         ]
     }
 
@@ -185,7 +189,20 @@ def aggregate_incidents(this_month_epoch: int, last_24h_epoch: int) -> dict:
     month_summary = summarize(month_incidents)
     day_summary = summarize(day_incidents)
 
-    return {
+    result = {
         "this_month": month_summary,
         "last_24h": day_summary
     }
+
+    # Recursive helper to convert all sets in the result dict to lists (for JSON serialization)
+    def convert_sets_to_lists(obj):
+        if isinstance(obj, dict):
+            return {k: convert_sets_to_lists(v) for k, v in obj.items()}
+        elif isinstance(obj, set):
+            return list(obj)
+        elif isinstance(obj, list):
+            return [convert_sets_to_lists(i) for i in obj]
+        else:
+            return obj
+
+    return convert_sets_to_lists(result)
