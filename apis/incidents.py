@@ -205,5 +205,13 @@ def aggregate_incidents(this_month_epoch: int, last_24h_epoch: int) -> dict:
             return [convert_sets_to_lists(i) for i in obj]
         else:
             return obj
+    
+    for period_key in ["this_month", "last_24h"]:
+        if "cmdb_ci_blank_workload_blank" not in result[period_key]:
+            result[period_key]["cmdb_ci_blank_workload_blank"] = {
+                "count": 0,
+                "source_tags": [],
+                "no_workload_no_source_count": 0
+            }
 
     return convert_sets_to_lists(result)
