@@ -9,7 +9,7 @@ def epoch_to_moogsoft_format(epoch_time: int) -> str:
     """
     Convert epoch seconds to Moogsoft time format: YYYY/MM/DD HH:MM:SS AM/PM
     """
-    return datetime.fromtimestamp(epoch_time, tz=timezone.utc).strftime("%Y/%m/%d %I:%M:%S %p")
+    return datetime.fromtimestamp(epoch_time, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 def fetch_incidents_since(start_epoch: int) -> list:
     """
