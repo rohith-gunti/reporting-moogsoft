@@ -51,8 +51,7 @@ def fetch_incidents_since(start_epoch: int) -> list:
         "limit": 5000,
         "fields": [
             "created_at",
-            "tags",
-            "manager"
+            "tags"
         ]
     }
 
