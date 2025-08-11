@@ -100,7 +100,7 @@ def main():
 
     # ✅ Fetch audit summary
     try:
-        audit_summary = audits.fetch_audit_summary(start_ms, end_ms)
+        audit_summary = audits.fetch_audit_counts(start_ms, end_ms)
     except Exception as e:
         print(f"Failed to fetch audit summary: {e}")
         audit_summary = {}
@@ -108,7 +108,7 @@ def main():
     # ✅ Fetch alerts summary
     try:
         alerts_summary = alerts.aggregate_alerts(
-            month_start_epoch=month_start_sec,
+            this_month_epoch=month_start_sec,
             last_24h_epoch=last_24h_sec
         )
     except Exception as e:
@@ -155,3 +155,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
