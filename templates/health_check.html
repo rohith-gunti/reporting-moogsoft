@@ -1,300 +1,266 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <meta charset="UTF-8">
     <title>Moogsoft Daily Report</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f8;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-        .container {
-            background-color: #ffffff;
-            margin: 30px auto;
-            padding: 30px;
-            border-radius: 8px;
-            max-width: 800px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            color: #007bff;
-            margin: 0;
-        }
-        .header p {
-            font-size: 14px;
-            color: #555;
-        }
-        .section {
-            margin-bottom: 30px;
-        }
-        .section h2 {
-            color: #007bff;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        table, th, td {
-            border: 1px solid #dee2e6;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            font-size: 14px;
-        }
-        th {
-            background-color: #e9ecef;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f6f8;
+        margin: 0;
+        padding: 0;
+        color: #333;
+      }
+
+      .container {
+        background-color: #ffffff;
+        margin: 30px auto;
+        padding: 30px;
+        border-radius: 8px;
+        max-width: 800px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        color: #007bff;
+        margin: 0;
+      }
+
+      .header p {
+        font-size: 14px;
+        color: #555;
+      }
+
+      .section {
+        margin-bottom: 30px;
+      }
+
+      .section h2 {
+        color: #007bff;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 5px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid #dee2e6;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        text-align: left;
+        font-size: 14px;
+      }
+
+      th {
+        background-color: #e9ecef;
+      }
     </style>
-</head>
-
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>📊 Moogsoft Daily Health Report</h1>
-            <p>Generated on {{ report_date }}</p>
-            <p style="font-size: 14px; color: #666;">
-                Reporting Period: <strong>{{ report_start }}</strong> to <strong>{{ report_end }}</strong>
-            </p>
-        </div>
-        <div class="summary-boxes">
-            <table>
-                <tr>
-                    <th>Events</th>
-                    <th>Alerts</th>
-                    <th>Incidents</th>
-                    <th>Noise Reduction</th>
-                </tr>
-                <tr>
-                    <td>{{ events_count }}</td>
-                    <td>{{ alerts_count }}</td>
-                    <td>{{ incidents_count }}</td>
-                    <td>{{ noise_reduction }}%</td>
-                </tr>
-            </table>
-            <br>
-            <table>
-                <tr>
-                    <th>Total Inbound Integrations</th>
-                    <th>Total Outbound Integrations</th>
-                </tr>
-                <tr>
-                    <td>{{ inbound_integrations_count }}</td>
-                    <td>{{ outbound_integrations_count }}</td>
-                </tr>
-            </table>
-        </div>
-        
-
-        <!-- Inbound Errors Section -->
-        <div class="section">
-            <h2>Inbound Integration Errors</h2>
-            {% if recent_inbound_errors %}
-            <h3>Recent Errors (Last 24 hours)</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Manager / Integration</th>
-                        <th>Error Count</th>
-                        <th>Reasons</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for manager, error_data in recent_inbound_errors.items() %}
-                    <tr>
-                        <td>{{ manager }}</td>
-                        <td>{{ error_data.count }}</td>
-                        <td>{{ error_data.reasons | unique | join(", ") }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p>No recent inbound integration errors in the last 24 hours.</p>
-            {% endif %}
-
-            <br>
-            {% if older_inbound_errors %}
-            <h3>Older Errors (More than 24 hours old)</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Manager / Integration</th>
-                        <th>Error Count</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for manager, error_data in older_inbound_errors.items() %}
-                    <tr>
-                        <td>{{ manager }}</td>
-                        <td>{{ error_data.count }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p>No older inbound integration errors.</p>
-            {% endif %}
-        </div>
-
-        <!-- Outbound Errors Section -->
-        <div class="section">
-            <h2>Outbound Integration Errors</h2>
-            {% if recent_outbound_errors %}
-            <h3>Recent Errors (Last 24 hours)</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Integration Name</th>
-                        <th>Error Count</th>
-                        <th>Messages</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for name, error_data in recent_outbound_errors.items() %}
-                    <tr>
-                        <td>{{ name }}</td>
-                        <td>{{ error_data.count }}</td>
-                        <td>{{ error_data.messages | unique | join(", ") }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p>No recent outbound integration errors in the last 24 hours.</p>
-            {% endif %}
-
-            <br>
-            {% if older_outbound_errors %}
-            <h3>Older Errors (More than 24 hours old)</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Integration Name</th>
-                        <th>Error Count</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for name, error_data in older_outbound_errors.items() %}
-                    <tr>
-                        <td>{{ name }}</td>
-                        <td>{{ error_data.count }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p>No older outbound integration errors.</p>
-            {% endif %}
-        </div>
-        <div class="section">
-    <h2>Catalog Sync Status: {{ catalog_sync_status }}</h2>
-    {% if recent_catalogs %}
-    <table>
-        <thead>
+      <div class="header">
+        <h1>📊 Moogsoft Daily Health Report</h1>
+        <p>Generated on {{ report_date }}</p>
+        <p style="font-size: 14px; color: #666;"> Reporting Period: <strong>{{ report_start }}</strong> to <strong>{{ report_end }}</strong>
+        </p>
+      </div>
+      <div class="summary-boxes">
+        <table>
+          <tr>
+            <th>Events</th>
+            <th>Alerts</th>
+            <th>Incidents</th>
+            <th>Noise Reduction</th>
+          </tr>
+          <tr>
+            <td>{{ events_count }}</td>
+            <td>{{ alerts_count }}</td>
+            <td>{{ incidents_count }}</td>
+            <td>{{ noise_reduction }}%</td>
+          </tr>
+        </table>
+        <br>
+        <table>
+          <tr>
+            <th>Total Inbound Integrations</th>
+            <th>Total Outbound Integrations</th>
+          </tr>
+          <tr>
+            <td>{{ inbound_integrations_count }}</td>
+            <td>{{ outbound_integrations_count }}</td>
+          </tr>
+        </table>
+      </div>
+      <!-- Inbound Errors Section -->
+      <div class="section">
+        <h2>Inbound Integration Errors</h2> {% if recent_inbound_errors %} <h3>Recent Errors (Last 24 hours)</h3>
+        <table>
+          <thead>
             <tr>
-                <th>Catalog Name</th>
-                <th>Entries</th>
-                <th>Last Updated</th>
+              <th>Manager / Integration</th>
+              <th>Error Count</th>
+              <th>Reasons</th>
             </tr>
-        </thead>
-        <tbody>
-            {% for catalog in recent_catalogs %}
+          </thead>
+          <tbody> {% for manager, error_data in recent_inbound_errors.items() %} <tr>
+              <td>{{ manager }}</td>
+              <td>{{ error_data.count }}</td>
+              <td>{{ error_data.reasons | unique | join(", ") }}</td>
+            </tr> {% endfor %} </tbody>
+        </table> {% else %} <p>No recent inbound integration errors in the last 24 hours.</p> {% endif %} <br> {% if older_inbound_errors %} <h3>Older Errors (More than 24 hours old)</h3>
+        <table>
+          <thead>
             <tr>
-                <td>{{ catalog.name }}</td>
-                <td>{{ catalog.entries }}</td>
-                <td>{{ catalog.last_updated }}</td>
+              <th>Manager / Integration</th>
+              <th>Error Count</th>
             </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>No catalogs found.</p>
-    {% endif %}
-</div>
-<!-- Maintenance Summary -->
-<div class="section">
-    <h2>Maintenance Summary</h2>
-    <table>
-        <tr>
+          </thead>
+          <tbody> {% for manager, error_data in older_inbound_errors.items() %} <tr>
+              <td>{{ manager }}</td>
+              <td>{{ error_data.count }}</td>
+            </tr> {% endfor %} </tbody>
+        </table> {% else %} <p>No older inbound integration errors.</p> {% endif %}
+      </div>
+      <!-- Outbound Errors Section -->
+      <div class="section">
+        <h2>Outbound Integration Errors</h2> {% if recent_outbound_errors %} <h3>Recent Errors (Last 24 hours)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Integration Name</th>
+              <th>Error Count</th>
+              <th>Messages</th>
+            </tr>
+          </thead>
+          <tbody> {% for name, error_data in recent_outbound_errors.items() %} <tr>
+              <td>{{ name }}</td>
+              <td>{{ error_data.count }}</td>
+              <td>{{ error_data.messages | unique | join(", ") }}</td>
+            </tr> {% endfor %} </tbody>
+        </table> {% else %} <p>No recent outbound integration errors in the last 24 hours.</p> {% endif %} <br> {% if older_outbound_errors %} <h3>Older Errors (More than 24 hours old)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Integration Name</th>
+              <th>Error Count</th>
+            </tr>
+          </thead>
+          <tbody> {% for name, error_data in older_outbound_errors.items() %} <tr>
+              <td>{{ name }}</td>
+              <td>{{ error_data.count }}</td>
+            </tr> {% endfor %} </tbody>
+        </table> {% else %} <p>No older outbound integration errors.</p> {% endif %}
+      </div>
+      <div class="section">
+        <h2>Catalog Sync Status: {{ catalog_sync_status }}</h2> {% if recent_catalogs %} <table>
+          <thead>
+            <tr>
+              <th>Catalog Name</th>
+              <th>Entries</th>
+              <th>Last Updated</th>
+            </tr>
+          </thead>
+          <tbody> {% for catalog in recent_catalogs %} <tr>
+              <td>{{ catalog.name }}</td>
+              <td>{{ catalog.entries }}</td>
+              <td>{{ catalog.last_updated }}</td>
+            </tr> {% endfor %} </tbody>
+        </table> {% else %} <p>No catalogs found.</p> {% endif %}
+      </div>
+      <!-- Maintenance Summary -->
+      <div class="section">
+        <h2>Maintenance Summary</h2>
+        <table>
+          <tr>
             <th>Active Windows (Last 24h)</th>
             <th>Configuration Items in Last 24h</th>
             <th>Total This Month</th>
-        </tr>
-        <tr>
+          </tr>
+          <tr>
             <td>{{ maintenance_summary.active_last_24h }}</td>
             <td>{{ maintenance_summary.config_items_in_24h }}</td>
             <td>{{ maintenance_summary.total_this_month }}</td>
-        </tr>
-    </table>
-</div>
-
-<!-- Alerts During Maintenance -->
-<div class="section">
-    <h2>Alerts Associated with Maintenance</h2>
-    {% for period, alert_dict in alerts_by_maintenance.items() %}
-    <h3>{{ period.replace("_", " ").title() }}</h3>
-    {% if alert_dict %}
-    <table>
-        <thead>
+          </tr>
+        </table>
+      </div>
+      <!-- Alerts During Maintenance -->
+      <div class="section">
+        <h2>Alerts Associated with Maintenance</h2> {% for period, alert_dict in alerts_by_maintenance.items() %} <h3>{{ period.replace("_", " ").title() }}</h3> {% if alert_dict %} <table>
+          <thead>
             <tr>
-                <th>Manager</th>
-                <th>Alert Count</th>
+              <th>Manager</th>
+              <th>Alert Count</th>
             </tr>
-        </thead>
-        <tbody>
-            {% for manager, count in alert_dict.items() %}
+          </thead>
+          <tbody> {% for manager, count in alert_dict.items() %} <tr>
+              <td>{{ manager }}</td>
+              <td>{{ count }}</td>
+            </tr> {% endfor %} </tbody>
+        </table> {% else %} <p>No alerts found for this period.</p> {% endif %} {% endfor %}
+      </div>
+      <!-- Audit Summary Section -->
+      <div class="section">
+        <h2>Audit Summary (Last 24 Hours)</h2> {% if audit_summary %} <table>
+          <thead>
             <tr>
-                <td>{{ manager }}</td>
-                <td>{{ count }}</td>
+              <th>Service</th>
+              <th>Change Count</th>
             </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>No alerts found for this period.</p>
-    {% endif %}
-    {% endfor %}
-</div>
-<!-- Audit Summary Section -->
-<div class="section">
-    <h2>Audit Summary (Last 24 Hours)</h2>
-    {% if audit_summary %}
-    <table>
-        <thead>
+          </thead>
+          <tbody> {% for service, count in audit_summary.items() %} <tr>
+              <td>{{ service }}</td>
+              <td>{{ count }}</td>
+            </tr> {% endfor %} </tbody>
+        </table> {% else %} <p>No audit changes detected in the last 24 hours.</p> {% endif %}
+      </div>
+      <!-- Alerts Summary Section -->
+      <div class="section">
+        <h2>Alerts Summary</h2>
+        <!-- Per Manager Summary --> {% if alerts_summary.per_manager %} {% for period, manager_data in alerts_summary.per_manager.items() %} <h3>{{ period.replace("_", " ").title() }} - Per Manager</h3>
+        <table>
+          <thead>
             <tr>
-                <th>Service</th>
-                <th>Change Count</th>
+              <th>Manager</th>
+              <th>Alert Count</th>
+              <th>Event Count</th>
+              <th>No Incident Event Count</th>
             </tr>
-        </thead>
-        <tbody>
-            {% for service, count in audit_summary.items() %}
+          </thead>
+          <tbody> {% for manager, stats in manager_data.items() %} <tr>
+              <td>{{ manager }}</td>
+              <td>{{ stats.alerts }}</td>
+              <td>{{ stats.events }}</td>
+              <td>{{ stats.no_incident_events }}</td>
+            </tr> {% endfor %} </tbody>
+        </table> {% endfor %} {% else %} <p>No per-manager alert summary available.</p> {% endif %}
+        <!-- Nagios Instance Breakdown --> {% if alerts_summary.nagios %} {% for period, instance_data in alerts_summary.nagios.items() %} <h3>{{ period.replace("_", " ").title() }} - Nagios Instance Breakdown</h3> {% if instance_data %} <table>
+          <thead>
             <tr>
-                <td>{{ service }}</td>
-                <td>{{ count }}</td>
+              <th>Instance</th>
+              <th>Event Count</th>
             </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>No audit changes detected in the last 24 hours.</p>
-    {% endif %}
-</div>
-
+          </thead>
+          <tbody> {% for instance, count in instance_data.items() %} <tr>
+              <td>{{ instance }}</td>
+              <td>{{ count }}</td>
+            </tr> {% endfor %} </tbody>
+        </table> {% else %} <p>No Nagios instance data for this period.</p> {% endif %} {% endfor %} {% else %} <p>No Nagios breakdown available.</p> {% endif %}
+      </div>
     </div>
-    
-</body>
-
+  </body>
 </html>
