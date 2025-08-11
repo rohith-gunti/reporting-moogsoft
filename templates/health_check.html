@@ -261,6 +261,126 @@
             </tr> {% endfor %} </tbody>
         </table> {% else %} <p>No Nagios instance data for this period.</p> {% endif %} {% endfor %} {% else %} <p>No Nagios breakdown available.</p> {% endif %}
       </div>
+      <!-- Incidents Summary Section -->
+      <div class="section">
+        <h2>Incidents Summary</h2>
+        <!-- This Month Summary -->
+        <h3>This Month</h3>
+        <table>
+          <tr>
+            <th>Total Incidents</th>
+            <th>SNOW Incidents Created</th>
+            <th>SNOW Creation Errors</th>
+            <th>Priority Upgraded</th>
+            <th>Auto Resolved</th>
+            <th>Not Created SNOW</th>
+          </tr>
+          <tr>
+            <td>{{ incidents_summary.this_month.total_count }}</td>
+            <td>{{ incidents_summary.this_month.sn_inc_created }}</td>
+            <td>{{ incidents_summary.this_month.sn_creation_errors }}</td>
+            <td>{{ incidents_summary.this_month.priority_upgraded }}</td>
+            <td>{{ incidents_summary.this_month.auto_resolved }}</td>
+            <td>{{ incidents_summary.this_month.not_created_sn }}</td>
+          </tr>
+        </table>
+        <!-- Per Manager Breakdown for This Month --> {% if incidents_summary.this_month.per_manager %} <h4>Per Manager Breakdown (This Month)</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Manager</th>
+              <th>Total Incidents</th>
+              <th>SNOW Incidents Created</th>
+              <th>SNOW Creation Errors</th>
+              <th>Priority Upgraded</th>
+              <th>Auto Resolved</th>
+              <th>Not Created SNOW</th>
+            </tr>
+          </thead>
+          <tbody> {% for manager, stats in incidents_summary.this_month.per_manager.items() %} <tr>
+              <td>{{ manager }}</td>
+              <td>{{ stats.total_count }}</td>
+              <td>{{ stats.sn_inc_created }}</td>
+              <td>{{ stats.sn_creation_errors }}</td>
+              <td>{{ stats.priority_upgraded }}</td>
+              <td>{{ stats.auto_resolved }}</td>
+              <td>{{ stats.not_created_sn }}</td>
+            </tr> {% endfor %} </tbody>
+        </table> {% else %} <p>No per-manager incident data for this month.</p> {% endif %}
+        <!-- Undiscovered Workloads -->
+        <h4>Undiscovered Workloads (This Month)</h4> {% if incidents_summary.this_month.undiscovered_workloads %} <ul> {% for workload in incidents_summary.this_month.undiscovered_workloads %} <li>{{ workload }}</li> {% endfor %} </ul> {% else %} <p>No undiscovered workloads reported.</p> {% endif %}
+        <!-- CMDB CI & Workload Blank Summary -->
+        <h4>CMDB CI & Workload Blank Alerts (This Month)</h4>
+        <table>
+          <tr>
+            <th>Total Count</th>
+            <th>No Workload & No Source Count</th>
+            <th>Source Tags</th>
+          </tr>
+          <tr>
+            <td>{{ incidents_summary.this_month.cmdb_ci_blank_workload_blank.count }}</td>
+            <td>{{ incidents_summary.this_month.cmdb_ci_blank_workload_blank.no_workload_no_source_count }}</td>
+            <td> {% if incidents_summary.this_month.cmdb_ci_blank_workload_blank.source_tags %} {{ incidents_summary.this_month.cmdb_ci_blank_workload_blank.source_tags | join(", ") }} {% else %} None {% endif %} </td>
+          </tr>
+        </table>
+        <!-- Splunk Workloads -->
+        <h4>Splunk Workloads (This Month)</h4> {% if incidents_summary.this_month.splunk_workloads %} <ul> {% for workload in incidents_summary.this_month.splunk_workloads %} <li>{{ workload }}</li> {% endfor %} </ul> {% else %} <p>No Splunk workloads reported.</p> {% endif %}
+        <!-- Repeat all above for Last 24 Hours -->
+        <h3>Last 24 Hours</h3>
+        <table>
+          <tr>
+            <th>Total Incidents</th>
+            <th>SNOW Incidents Created</th>
+            <th>SNOW Creation Errors</th>
+            <th>Priority Upgraded</th>
+            <th>Auto Resolved</th>
+            <th>Not Created SNOW</th>
+          </tr>
+          <tr>
+            <td>{{ incidents_summary.last_24h.total_count }}</td>
+            <td>{{ incidents_summary.last_24h.sn_inc_created }}</td>
+            <td>{{ incidents_summary.last_24h.sn_creation_errors }}</td>
+            <td>{{ incidents_summary.last_24h.priority_upgraded }}</td>
+            <td>{{ incidents_summary.last_24h.auto_resolved }}</td>
+            <td>{{ incidents_summary.last_24h.not_created_sn }}</td>
+          </tr>
+        </table> {% if incidents_summary.last_24h.per_manager %} <h4>Per Manager Breakdown (Last 24 Hours)</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Manager</th>
+              <th>Total Incidents</th>
+              <th>SNOW Incidents Created</th>
+              <th>SNOW Creation Errors</th>
+              <th>Priority Upgraded</th>
+              <th>Auto Resolved</th>
+              <th>Not Created SNOW</th>
+            </tr>
+          </thead>
+          <tbody> {% for manager, stats in incidents_summary.last_24h.per_manager.items() %} <tr>
+              <td>{{ manager }}</td>
+              <td>{{ stats.total_count }}</td>
+              <td>{{ stats.sn_inc_created }}</td>
+              <td>{{ stats.sn_creation_errors }}</td>
+              <td>{{ stats.priority_upgraded }}</td>
+              <td>{{ stats.auto_resolved }}</td>
+              <td>{{ stats.not_created_sn }}</td>
+            </tr> {% endfor %} </tbody>
+        </table> {% else %} <p>No per-manager incident data for last 24 hours.</p> {% endif %} <h4>Undiscovered Workloads (Last 24 Hours)</h4> {% if incidents_summary.last_24h.undiscovered_workloads %} <ul> {% for workload in incidents_summary.last_24h.undiscovered_workloads %} <li>{{ workload }}</li> {% endfor %} </ul> {% else %} <p>No undiscovered workloads reported.</p> {% endif %} <h4>CMDB CI & Workload Blank Alerts (Last 24 Hours)</h4>
+        <table>
+          <tr>
+            <th>Total Count</th>
+            <th>No Workload & No Source Count</th>
+            <th>Source Tags</th>
+          </tr>
+          <tr>
+            <td>{{ incidents_summary.last_24h.cmdb_ci_blank_workload_blank.count }}</td>
+            <td>{{ incidents_summary.last_24h.cmdb_ci_blank_workload_blank.no_workload_no_source_count }}</td>
+            <td> {% if incidents_summary.last_24h.cmdb_ci_blank_workload_blank.source_tags %} {{ incidents_summary.last_24h.cmdb_ci_blank_workload_blank.source_tags | join(", ") }} {% else %} None {% endif %} </td>
+          </tr>
+        </table>
+        <h4>Splunk Workloads (Last 24 Hours)</h4> {% if incidents_summary.last_24h.splunk_workloads %} <ul> {% for workload in incidents_summary.last_24h.splunk_workloads %} <li>{{ workload }}</li> {% endfor %} </ul> {% else %} <p>No Splunk workloads reported.</p> {% endif %}
+      </div>
     </div>
   </body>
 </html>
