@@ -26,7 +26,7 @@ def fetch_incidents_since(start_epoch: int) -> list:
     date_from_str = epoch_to_moogsoft_format(start_epoch)
 
     payload = {
-        "filter": {
+        "json_filter": {
             "created_at": {
                 "filterType": "combined",
                 "operator": "AND",
